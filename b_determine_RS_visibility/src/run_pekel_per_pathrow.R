@@ -9,6 +9,6 @@
 #' 
 #' 
 run_pekel_per_pathrow <- function(WRS_pathrow) {
-  write_lines(WRS_pathrow, "b_determine_RS_visibility/run/current_pathrow.txt", sep = "")
-  source_python("b_determine_RS_visibility/py/run_pekel_per_pathrow.py")
+  write_lines(WRS_pathrow, "5_determine_RS_visibility/run/current_pathrow.txt", sep = "")
+  source_python("5_determine_RS_visibility/py/run_pekel_per_pathrow.py")
 }

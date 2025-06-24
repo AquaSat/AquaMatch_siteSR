@@ -3,7 +3,7 @@
 # in the siteSR dataset in the {targets} group `d_qa_stack`
 default:
   # gmail account to associate with {googledrive}
-  google_email: "therossyndicate@gmail.com"
+  google_email: ""
   # location where you want to store the output of the pipeline, if `update_and_share` is set to TRUE
   drive_project_folder: "~/FILE_PATH/" # note: must start with "~/" and end with "/"
   # should pipeline use pre-existing site collaiton (all WQP/NWIS surface water sites)
@@ -18,7 +18,7 @@ default:
   # to TRUE. requires GEE authentication and update of the `gee_config.yml` file)
   run_GEE: FALSE
   # date of stored pekel/gee version (if `run_pekel` and `run_GEE` set to false)
-  pekel_gee_version: "2025-06-06" 
+  pekel_gee_version: "2025-06-02" 
   update_and_share: FALSE # indication of whether of not the 'export' siteSR files should be 
   # uploaded to Drive, requires drive_project_folder if set to TRUE
 

@@ -12,7 +12,7 @@
 #' 
 #' 
 get_WRS_pathrows <- function(detection_method, yaml, locs, out_folder) {
-  WRS <- read_sf("b_determine_RS_visibility/in/WRS2_descending.shp")
+  WRS <- read_sf("5_determine_RS_visibility/in/WRS2_descending.shp")
   if (detection_method == "site") {
     sf <- st_as_sf(locs, 
                    coords = c("Longitude", "Latitude"), 

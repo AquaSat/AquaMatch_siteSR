@@ -7,11 +7,11 @@ import numpy as np
 
 # LOAD ALL THE CUSTOM FUNCTIONS -----------------------------------------------
 
-def csv_to_eeFeat(df_chunk, proj, chunk, chunk_size):
+def csv_to_eeFeat(df, proj, chunk, chunk_size):
     """Function to create an eeFeature from the location data
 
     Args:
-        df_chunk: point locations .csv file with Latitude and Longitude
+        df: point locations .csv file with Latitude and Longitude
         proj: CRS projection of the points
         chunk: iteration through the dataframe (defined in process chunks)
         chunk_size: number of sites in chunk
@@ -20,10 +20,13 @@ def csv_to_eeFeat(df_chunk, proj, chunk, chunk_size):
         ee.FeatureCollection of the points 
     """
     features = []
+    # Calculate start and end indices for the current chunk
+    range_min = chunk_size * chunk
+    range_max = min(chunk_size * (chunk + 1), len(df))
     
-    for r in range(len(df_chunk)):
+    for i in range(range_min, range_max):
         try:
-            row = df_chunk.iloc[r]
+            row = df.iloc[i]
             x, y = row['Longitude'], row['Latitude']
             latlong = [x, y]
             loc_properties = {'system:index': str(row['id']), 'id': str(row['id'])}
@@ -31,7 +34,7 @@ def csv_to_eeFeat(df_chunk, proj, chunk, chunk_size):
             feature = ee.Feature(g, loc_properties)
             features.append(feature)
         except KeyError as e:
-            print(f"KeyError at index {r}, skipping to next iteration")
+            print(f"KeyError at index {i}, skipping to next iteration")
             continue  # skip to the next iteration
     
     return ee.FeatureCollection(features)
@@ -67,7 +70,7 @@ def maximum_no_of_tasks(MaxNActive, waitingPeriod):
 
 
 # get locations and yml from data folder
-yml = pd.read_csv('b_determine_RS_visibility/run/yml.csv')
+yml = pd.read_csv('5_determine_RS_visibility/run/yml.csv')
 
 eeproj = yml['ee_proj'][0]
 #initialize GEE
@@ -87,12 +90,12 @@ extent = (yml['extent'][0]
   .split('+'))
   
 # get current pathrow
-with open('b_determine_RS_visibility/run/current_pathrow.txt', 'r') as file:
+with open('5_determine_RS_visibility/run/current_pathrow.txt', 'r') as file:
   pathrows = file.read()
 
 # read locations and filtere for this pathrow
-locations = (pd.read_csv('b_determine_RS_visibility/run/locs_with_wrs_for_pekel.csv', 
-                      dtype = ({"id": str, 
+locations = (pd.read_csv('5_determine_RS_visibility/run/locs_with_wrs_for_pekel.csv', 
+                      dtype = ({"id": np.int32, 
                                 "Latitude": np.float64, 
                                 "Longitude": np.float64, 
                                 "WRSPR": str})))
@@ -139,23 +142,12 @@ def get_occurrence(point):
 
 # Map the get_occurrence function over the 5000 or so created sites
 def process_subset(df_subset, chunk, chunk_size, wrs_pathrow):
-    """ Function to process subsets of a data frame to check visibility in EE
-    
-    Args:
-        df_subset: point locations .csv file with Latitude and Longitude
-        chunk: iteration through the dataframe (defined in process chunks)
-        chunk_size: number of sites in chunk
-        wrs_pathrow: six digit WRS pathrow identifier for file naming conventions
-    
-    Returns:
-      none
-
+    """
+    This function processes a subset of the DataFrame.
+    Replace this with your actual processing function.
     """
 
-    locs_feature = (csv_to_eeFeat(df_chunk = df_subset, 
-                                 proj = yml['location_crs'][0], 
-                                 chunk = chunk, 
-                                 chunk_size = chunk_size))
+    locs_feature = csv_to_eeFeat(df_subset, yml['location_crs'][0], chunk, chunk_size)
 
     outdata = locs_feature.map(get_occurrence)
     #Define a data export 
@@ -179,7 +171,6 @@ def process_dataframe_in_chunks(df, wrs_pathrow, chunk_size = 5000):
     
     Args:
     df (pandas.DataFrame): The input DataFrame
-    wrs_pathrow: six digit WRS pathrow identifier for file naming conventions
     chunk_size (int): The number of rows in each chunk (default: 5000)
     
     Returns:
@@ -200,10 +191,7 @@ def process_dataframe_in_chunks(df, wrs_pathrow, chunk_size = 5000):
         df_subset = df.iloc[start_idx:end_idx]
         
         # Process the subset and store the result
-        result = (process_subset(df_subset = df_subset, 
-                                 chunk = i, 
-                                 chunk_size = chunk_size,
-                                 wrs_pathrow = wrs_pathrow))
+        result = process_subset(df_subset, i, chunk_size, wrs_pathrow)
 
         print(f"Sent chunk {i+1}/{num_chunks}")
     

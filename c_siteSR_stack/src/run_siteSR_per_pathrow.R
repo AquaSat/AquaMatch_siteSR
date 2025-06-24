@@ -11,7 +11,7 @@
 #' 
 run_siteSR_per_pathrow <- function(WRS_pathrow) {
   # document WRS tile for python script
-  write_lines(WRS_pathrow, "c_siteSR_stack/out/current_pathrow.txt", sep = "")
+  write_lines(WRS_pathrow, "6_siteSR_stack/out/current_pathrow.txt", sep = "")
   # run the python script
-  source_python("c_siteSR_stack/py/run_siteSR_per_pathrow.py")
+  source_python("6_siteSR_stack/py/run_siteSR_per_pathrow.py")
 }

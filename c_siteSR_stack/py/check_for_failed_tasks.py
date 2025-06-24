@@ -4,7 +4,7 @@ import time
 import os
 
 # get configs from yml file
-yml = read_csv("b_determine_RS_visibility/run/yml.csv")
+yml = read_csv("5_determine_RS_visibility/run/yml.csv")
 # assign proj
 eeproj = yml["ee_proj"][0]
 # initialize GEE with proj
@@ -23,5 +23,5 @@ ts = list(ee.batch.Task.list())
 for task in ts:
    if ("FAIL" in task.status()['state'] and run_date in task.status()['description']):
        # add the task description to a file called 'GEE_task_errors.csv'
-       with open(os.path.join('c_siteSR_stack/out/', fn), 'a') as f:
+       with open(os.path.join('6_siteSR_stack/out/', fn), 'a') as f:
           f.write(task.status()['description'] + '\n')

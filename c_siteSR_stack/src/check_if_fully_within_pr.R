@@ -1,14 +1,14 @@
 #' @title Check to see if point is completely contained within path-row
 #' 
 #' @description
-#' Using the output of the previous target `c_WRS_pathrows`, and the output of 
-#' the target `b_visible_sites`, add WRS pathrow information to the locations 
+#' Using the output of the previous target `p6_WRS_pathrows`, and the output of 
+#' the target `p5_visible_sites`, add WRS pathrow information to the locations 
 #' file, remove buffered points that are not completely within the 
 #' path row geometry.
 #' 
-#' @param WRS_pathrows list of pathrows to iterate over, output of target `c_WRS_pathrows`
-#' @param locations dataframe of locations, output of target `b_visible_sites`
-#' @param yml contents of the reformatted yaml .csv file, output of target `b_yml`
+#' @param WRS_pathrows list of pathrows to iterate over, output of target `p6_WRS_pathrows`
+#' @param locations dataframe of locations, output of target `p5_visible_sites`
+#' @param yml contents of the reformatted yaml .csv file, output of target `p5_yml`
 #' 
 #' @returns tibble of locations that includes WRS2 pathrow if, when buffered, they 
 #' are fully contained by the WRS2 pathrow extent
@@ -20,11 +20,11 @@
 #' 
 check_if_fully_within_pr <- function(WRS_pathrow, locations, yml) {
   # make a directory of locations for use in python workflow
-  if (!dir.exists("c_siteSR_stack/out/locations/")) {
-    dir.create("c_siteSR_stack/out/locations/")
+  if (!dir.exists("6_siteSR_stack/out/locations/")) {
+    dir.create("6_siteSR_stack/out/locations/")
   }
   # get the WRS2 shapefile
-  WRS <- read_sf("b_determine_RS_visibility/in/WRS2_descending.shp")
+  WRS <- read_sf("5_determine_RS_visibility/in/WRS2_descending.shp")
   # make locations into a {sf} object
   locs <- st_as_sf(locations, 
                    coords = c("Longitude", "Latitude"), 
@@ -86,7 +86,7 @@ check_if_fully_within_pr <- function(WRS_pathrow, locations, yml) {
     select(-is_contained_by_WRS) %>% 
     left_join(., locations)
   write_csv(filtered, 
-            paste0("c_siteSR_stack/out/locations/locations_", 
+            paste0("6_siteSR_stack/out/locations/locations_", 
                    WRS_pathrow, 
                    ".csv"))
   filtered

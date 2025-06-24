@@ -36,8 +36,8 @@ configuration profiles: "default" and "admin_update".
     the pipeline
 
 -   "admin_update" is intended for use by ROSSyndicate members when updating
-    siteSR datasets, creating publicly-stable versions of siteSR to be
-    stored in the AquaMatch_siteSR repository.
+    siteSR datasets, creating publicly-stable versions of the siteSR_WQP to be
+    stored in the AquaMatch_siteSR_WQP repository.
 
 This pipeline does not apply handoff coefficients between Landsat missions,
 which are imperative for analyzing the data that overlap multiple sensors. See
@@ -46,11 +46,11 @@ handoffs](https://aquasat.github.io/AquaMatch_lakeSR/define-handoff.html) for
 additional guidance on this matter.
 
 Proper configuration of harmonize_repo_directory and lakeSR_repo_directory is
-imperative as the siteSR workflow references files inside
+imperative as the siteSR_WQP workflow references files inside
 AquaMatch_harmonize_WQP and AquaMatch_lakeSR file structures. If this is
 incorrectly set up, users will receive a message to communicate this and the
-workflow will stop. All repositories stored on the AquaMatch GitHub will
-contain files that link to versions of the data that the AquaMatch team has
+workflow will stop. All repositories stored on the AquaSat v2 GitHub will
+contain files that link to versions of the data that the AquaSat v2 team has
 harmonized so that a local run is not necessitated. Any run of the "default"
 configuration will require that the harmonize pipeline has been run locally.
 

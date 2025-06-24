@@ -29,7 +29,7 @@ def csv_to_eeFeat(df, proj, chunk, chunk_size):
   for i in range(range_min, range_max):
     try:
       x,y = df.Longitude[i],df.Latitude[i]
-      latlong =[x, y]
+      latlong =[x,y]
       loc_properties = {'system:index':str(df.id[i]), 'id':str(df.id[i])}
       g=ee.Geometry.Point(latlong, proj) 
       feature = ee.Feature(g, loc_properties)
@@ -1792,7 +1792,7 @@ def maximum_no_of_tasks(MaxNActive, waitingPeriod):
 ##############################################
 
 # get locations and yml from data folder
-yml = read_csv("b_determine_RS_visibility/run/yml.csv")
+yml = read_csv("5_determine_RS_visibility/run/yml.csv")
 
 eeproj = yml["ee_proj"][0]
 #initialize GEE
@@ -1831,11 +1831,11 @@ except AttributeError:
 extent = yml["extent"][0]
 
 # get current tile
-with open("c_siteSR_stack/out/current_pathrow.txt", "r") as file:
+with open("6_siteSR_stack/out/current_pathrow.txt", "r") as file:
   pr = file.read()
 
 # create file name of location data
-locs_fn = os.path.join("c_siteSR_stack/out/locations/", ("locations_" + pr + ".csv"))
+locs_fn = os.path.join("6_siteSR_stack/out/locations/", ("locations_" + pr + ".csv"))
 
 # read in locations file
 locations_subset = read_csv(locs_fn)

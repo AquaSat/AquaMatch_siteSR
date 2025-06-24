@@ -16,7 +16,6 @@ if (config::get(config = general_config)$compile_locations) {
       command = {
         directories <- c("a_compile_sites/mid/",
                          "a_compile_sites/out/",
-                         "a_compile_sites/out/failed_HUC/",
                          "a_compile_sites/nhd/")
         walk(directories, function(dir) {
           if(!dir.exists(dir)){
@@ -148,15 +147,14 @@ if (config::get(config = general_config)$compile_locations) {
       packages = c("tidyverse", "googledrive")
     ),
     tar_target(
-      name = a_AquaMatch_doc_sites,
-      command = {
+      name = a_AquaMatch_doc_sites {
         a_check_dir_structure
-        retrieve_target(target = "p3_doc_harmonized_site_info", 
-                        id_df = a_AquaMatch_doc_drive_ids,
-                        local_folder = "a_compile_sites/mid/", 
-                        google_email = siteSR_config$google_email, 
-                        file_type = "rds",
-                        date_stamp = "20240701") %>% 
+        command = retrieve_target(target = "p3_doc_harmonized_site_info", 
+                                  id_df = a_AquaMatch_doc_drive_ids,
+                                  local_folder = "a_compile_sites/mid/", 
+                                  google_email = siteSR_config$google_email, 
+                                  file_type = "rds",
+                                  date_stamp = "20240701") %>% 
           filter(!MonitoringLocationIdentifier %in% a_WQP_site_metadata$MonitoringLocationIdentifier)
       },
       packages = c("tidyverse", "googledrive")
@@ -175,7 +173,7 @@ if (config::get(config = general_config)$compile_locations) {
       }, 
       packages = c("tidyverse", "googledrive")
     ),
-    ## TSS 
+    ## TSS - Drive doesn't think there is a dated version available at this time (?)
     tar_target(
       name = a_AquaMatch_tss_sites,
       command = {
@@ -184,8 +182,7 @@ if (config::get(config = general_config)$compile_locations) {
                         id_df = a_AquaMatch_tss_drive_ids,
                         local_folder = "a_compile_sites/mid/", 
                         google_email = siteSR_config$google_email, 
-                        file_type = "rds",
-                        date_stamp = "20250430") %>% 
+                        file_type = "rds") %>% 
           filter(!MonitoringLocationIdentifier %in% a_WQP_site_metadata$MonitoringLocationIdentifier)
       }, 
       packages = c("tidyverse", "googledrive")
@@ -208,7 +205,7 @@ if (config::get(config = general_config)$compile_locations) {
           unique() %>% 
           rowid_to_column("siteSR_id") %>% 
           mutate(siteSR_id = paste0("AM_", siteSR_id),
-                 source = "WQP")
+                 source = "AM")
       }
     ),
     
@@ -229,7 +226,7 @@ if (config::get(config = general_config)$compile_locations) {
     
     # save this as a .rds file in drive
     tar_target(
-      name = a_save_all_site_locs_drive,
+      name = a_save_all_site_locs,
       command = {
         export_single_target(target = a_all_site_locations,
                              drive_path = check_targets_drive,
@@ -239,14 +236,6 @@ if (config::get(config = general_config)$compile_locations) {
                              file_type = "rds")
       },
       packages = c("tidyverse", "googledrive"),
-    ),
-    
-    # save this as a .csv file locally for GEE run
-    tar_target(
-      name = a_save_all_site_locs_local,
-      command = a_all_site_locations %>% 
-        st_drop_geometry() %>% 
-        write_csv(., "a_compile_sites/out/a_all_site_locations.csv")
     ),
     
     # get the drive id info
@@ -264,56 +253,35 @@ if (config::get(config = general_config)$compile_locations) {
     
     # Associate location with NHD waterbody and flowline ------------------------
     
-    # we're going to group the sites by their data source and org id, mostly for 
-    # the HUC assignment step to reduce long processing times per branch
+    # we're going to group the sites by their source for processing here
     tar_target(
       name = a_grouped_sites,
       command = a_all_site_locations %>% 
-        group_by(source, org_id) %>% 
+        group_by(source) %>% 
         tar_group(),
       iteration = "group",
       packages = c("tidyverse", "sf", "targets")
     ),
     
     # Nearly all WQP sites have a HUC8 reported in the `HUCEightDigitCode` field, 
-    # but a few need it assigned (or are assigned incorrectly), as do all of the NWIS sites
+    # but a few need it assigned, as do all of the NWIS sites
     # this step also adds a flag to gap-filled HUC8 fields:
-    # 0 = HUC8 reported in WQP site information, matches nhdplusTools assignment
-    # 1 = HUC8 determined from nhdplusTools (from NHD), WQP/AM site info was blank
-    # 2 = HUC8 mismatch between WQP/AM assignment and nhdplusTools assignment, 
-    # using nhdplusTools assignment
-    # 3 = HUC8 unable to be determined for site location
-    
-    # first step is to download the staged wbd dataset, since pinging the NHD API
-    # is not sustainable, and repeating this 1 million times takes quite a bit of
-    # time.
-    tar_target(
-      name = a_wbd_gdb,
-      command = {
-        if (!dir.exists("a_compile_sites/nhd/WBD_National_GDB/")) {
-          download_wbd(outdir = "a_compile_sites/nhd/")
-          unzip("a_compile_sites/nhd/WBD_National_GDB.zip", 
-                exdir = "a_compile_sites/nhd/WBD_National_GDB/")
-          unlink("a_compile_sites/nhd/WBD_National_GDB.zip")
-        }
-        read_sf("a_compile_sites/nhd/WBD_National_GDB/WBD_National_GDB.gdb", 
-                layer = "WBDHU8") %>% 
-          st_make_valid()
-      },
-      packages = c("nhdplusTools", "sf")
-    ),
-    
+    # 0 = HUC8 reported in WQP site information
+    # 1 = HUC8 determined from nhdplusTools (from NHD)
+    # 2 = HUC8 unable to be determined for site location
     tar_target(
       name = a_sites_add_HUC8,
       command = {
-        assigned <- add_HUC8_to_sites(sites = a_grouped_sites, hucs = a_wbd_gdb)
-        # create flag for huc assignment based on HUCEightDigitCode and assigned_HUC
-        assigned %>% 
-          mutate(flag_HUC8 = case_when(HUCEightDigitCode == assigned_HUC ~ 0,
-                                       is.na(HUCEightDigitCode) & !is.na(assigned_HUC) ~ 1,
-                                       HUCEightDigitCode != assigned_HUC ~ 2, 
-                                       is.na(HUCEightDigitCode) & is.na(assigned_HUC) ~ 3,
-                                       .default = NA_real_))
+        need_HUC8 <- a_grouped_sites %>%
+          filter(is.na(HUCEightDigitCode)) %>%
+          # default the flag to 1 and reassign if HUC can not be added
+          mutate(flag_HUC8 = 1)
+        assigned_HUC8 <- add_HUC8_to_sites(sites_without_HUC = need_HUC8)
+        a_grouped_sites %>%
+          filter(!is.na(HUCEightDigitCode)) %>%
+          mutate(flag_HUC8 = 0) %>%
+          bind_rows(assigned_HUC8) %>%
+          mutate(flag_HUC8 = if_else(is.na(HUCEightDigitCode), 2, flag_HUC8))
       },
       pattern = map(a_grouped_sites),
       iteration = "list",
@@ -328,14 +296,13 @@ if (config::get(config = general_config)$compile_locations) {
       command = {
         dt <- map(a_sites_add_HUC8, as.data.table) %>% 
           rbindlist() 
-        unique(str_sub(dt[!is.na(assigned_HUC), assigned_HUC], 1, 4))
+        unique(str_sub(dt[!is.na(HUCEightDigitCode), HUCEightDigitCode], 1, 4))
       },
       packages = c("data.table", "tidyverse")
     ),
     
     # Get the waterbodies associated with each lake/reservoir site by HUC4, 
-    # leave these in a list for other branching functions - my hope is that only
-    # changed branches will be re-run and not all of the data every time.
+    # leave these in a list for other branching funcitons
     tar_target(
       name = a_add_NHD_waterbody_info,
       command = {
@@ -370,37 +337,34 @@ if (config::get(config = general_config)$compile_locations) {
         a_check_dir_structure
         # join the waterbody metadata data together
         waterbody_info <- map(a_add_NHD_waterbody_info,
-              function(w) {
-                w[1]}
-              ) %>%
+                              function(l) {
+                                # get the first object of the list item (nhd info with waterbody info)
+                                l[1]
+                              }) %>%
           bind_rows() 
         # and the flowine data
         flowline_info <- map(a_add_NHD_flowline_info,
-                             function(f) {
+                             function(l) {
                                # get the first object of the list item (nhd info with waterbody info)
-                               f[1]
+                               l[1]
                              }) %>%
           bind_rows()
-        georef_sites <- a_sites_add_HUC8 %>% 
-          bind_rows() %>% 
-          st_drop_geometry() %>% 
-          # remove the targets grouping column
-          select(-tar_group)
         collated_sites <- full_join(waterbody_info,
                                     flowline_info) %>%
           # add in spatial info from above
-          full_join(georef_sites, .)
+          full_join(a_sites_add_HUC8, .) %>%
+          st_drop_geometry()
         # get the intersections data to add to this
         waterbody_intersections <- map(a_add_NHD_waterbody_info,
-                                       function(w) {
+                                       function(l) {
                                          # get the second object of the list item (intersection info)
-                                         w[2]
+                                         l[2]
                                        }) %>%
           bind_rows()
         flowline_intersections <- map(a_add_NHD_flowline_info,
-                                      function(f) {
+                                      function(l) {
                                         # get the first object of the list item (intersection info)
-                                        f[2]
+                                        l[2]
                                       }) %>%
           bind_rows()
         
@@ -439,7 +403,7 @@ if (config::get(config = general_config)$compile_locations) {
                                                          dist_to_shore > (as.numeric(b_yml$site_buffer) + 100) &
                                                            flag_wb == 0 ~ 0))
         write_csv(collated_sites,
-                  paste0("a_compile_sites/out/collated_WQP_NWIS_sites_with_NHD_info_", siteSR_config$collated_site_version, ".csv"))
+                  "a_compile_sites/out/collated_WQP_sites_with_metadata.csv")
         collated_sites
       },
     ),
@@ -479,7 +443,6 @@ if (config::get(config = general_config)$compile_locations) {
   a_compile_sites <- list(
     
     # load in distinct sites did file and retrieve target
-    # locs w/o NHD attribution
     tar_file_read(
       name = a_all_site_locs_Drive_id,
       command = "a_compile_sites/out/all_site_locations_drive_id.csv",
@@ -490,7 +453,7 @@ if (config::get(config = general_config)$compile_locations) {
     tar_target(
       name = a_all_site_locations,
       command = retrieve_target(target = "a_all_site_locations",
-                                id_df = a_all_site_locs_Drive_id, 
+                                id_df = a_hamonized_sites_Drive_id, 
                                 local_folder = "a_compile_sites/out/", 
                                 google_email = siteSR_config$google_email,
                                 date_stamp = paste0("v", siteSR_config$collated_site_version),
@@ -498,7 +461,7 @@ if (config::get(config = general_config)$compile_locations) {
       packages = c("tidyverse", "googledrive")
     ),
     
-    # load in the sites **with** NHD info.
+    # load in the collated sites did file and retrieve target
     tar_file_read(
       name = a_sites_with_NHD_Drive_id,
       command = "a_compile_sites/out/sites_with_NHD_drive_id.csv",
@@ -513,7 +476,7 @@ if (config::get(config = general_config)$compile_locations) {
                                 local_folder = "a_compile_sites/out/", 
                                 google_email = siteSR_config$google_email,
                                 date_stamp = paste0("v", siteSR_config$collated_site_version),
-                                file_type = "rds"),
+                                file_type = ".rds"),
       packages = c("tidyverse", "googledrive")
     )
     

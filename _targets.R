@@ -34,8 +34,8 @@ tar_option_set(
 
 # Run the R scripts with custom functions:
 tar_source(c("a_compile_sites.R",
-             "b_determine_RS_visibility.R",
-             "c_siteSR_stack.R"
+             "b_determine_RS_visibility.R"
+             # "c_siteSR_stack.R",
              # "d_qa_stack.R"
 ))
 
@@ -93,7 +93,7 @@ config_targets <- list(
 # Full targets list
 c(config_targets,
   a_compile_sites,
-  b_determine_RS_visibility,
-  c_siteSR_stack
+  b_determine_RS_visibility
+  # c_siteSR_stack,
   # d_qa_stack
 )

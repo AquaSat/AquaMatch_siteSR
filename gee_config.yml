@@ -5,10 +5,10 @@
 # indicated. All inputs are case-sensitive.
 
 local_settings:
-- pekel_data_dir: "~/Documents/GitHub/AquaMatch_siteSR_WQP/a_compile_sites/out/" # point to the *full* directory path where your location 
+- pekel_data_dir: "~/Documents/GitHub/AquaMatch_siteSR_WQP/4_compile_sites/out/" # point to the *full* directory path where your location 
 # information is stored - this path must end with a '/'
-- pekel_location_file: "a_all_site_locations.csv" # name of the *.csv* file that contains the location information
-- siteSR_data_dir: "~/Documents/GitHub/AquaMatch_siteSR_WQP/b_determine_RS_visibility/run/" # point to the *full* directory path where your location 
+- pekel_location_file: "distinct_WQP_sites.csv" # name of the *.csv* file that contains the location information
+- siteSR_data_dir: "~/Documents/GitHub/AquaMatch_siteSR_WQP/5_determine_RS_visibility/run/" # point to the *full* directory path where your location 
 - siteSR_location_file: "visible_locs_with_WRS.csv"
 - unique_id: "siteSR_id" # this is the column that stores the unique identifier for each 
 # site or polygon and should not contain any special characters
@@ -30,7 +30,7 @@ google_settings:
 # the siteSR data is exported to, located at the root directory of your Google Drive.
 # must start with "~/" and end with "/"
 - ee_proj: "ee-aquamatch" # this is the ee project name you are running your pulls from
-- run_date: "2025-06-06" # date of run for versioning, must be in YYYY-MM-DD foramt
+- run_date: "2025-02-24" # date of run for versioning, must be in YYYY-MM-DD foramt
 
 temporal_settings: 
 - start_date: "1983-01-01" # earliest data of satellite data to be acquired; 

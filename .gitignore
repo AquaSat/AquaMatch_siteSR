@@ -19,8 +19,8 @@ _targets/
 a_compile_sites/mid/*
 a_compile_sites/out/*
 a_compile_sites/nhd/*
-!a_compile_sites/out/all_site_locations_drive_id.csv
-!a_compile_sites/out/sites_with_NHD_drive_id.csv
+!a_compile_sites/out/collated_sites_drive_id.csv
+!a_compile_sites/out/harmonized_sites_drive_id.csv
 
 b_determine_RS_visibility/mid/*
 b_determine_RS_visibility/down/*

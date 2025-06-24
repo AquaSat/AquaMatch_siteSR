@@ -19,7 +19,7 @@
 #' 
 check_for_containment <- function(WRS_pathrow, locations, yaml) {
   # get the WRS2 shapefile
-  WRS <- read_sf("b_determine_RS_visibility/in/WRS2_descending.shp")
+  WRS <- read_sf("5_determine_RS_visibility/in/WRS2_descending.shp")
   # make locations into a {sf} object
   locs <- st_as_sf(locations, 
                    coords = c("Longitude", "Latitude"), 
