@@ -1,10 +1,12 @@
 # AquaMatch_siteSR
 
-The third repository in the AquaMatch constellation. This repository determines remote sensing visibility and acquires surface reflectance data for RS-visible sites from the Water Quality Portal harmonized datasets.
+The third repository in the AquaMatch constellation. This repository determines remote sensing visibility and acquires surface reflectance data for RS-visible sites from the Water Quality Portal harmonized datasets and National Water Information System site locations.
 
 We suggest users use the `run_targets.Rmd` script to run this workflow, as it walks through all necessary configuration and authentication steps prior to running the workflow.
 
 This repository is covered by the MIT use license. We request that all downstream uses of this work be available to the public when possible.
+
+NOTE: there is a patch (`a_all_site_locations_patch.Rmd`) to remove an unclosed quote from the `siteSR_collated_WQP_NWIS_sites_with_NHD_info_2025-06-04.csv` file for publication at EDI. This creates a file with the name `siteSR_collated_WQP_NWIS_sites_with_NHD_info_2026-01-18.csv` these files are identical other than the deletion of the single instance of the unclosed quote in the file dated 2025-06-04. End users can use either file for downstream applications.
 
 ## Prerequisites
 

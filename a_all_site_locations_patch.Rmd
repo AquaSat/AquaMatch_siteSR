@@ -1,0 +1,40 @@
+---
+title: "a_all_site_locations_patch"
+output: html_document
+---
+
+This file provides a quick patch for a single unclosed quote in the loc_id 
+column of the collated site list for siteSR 
+(siteSR_collated_WQP_NWIS_sites_with_NHD_info_2025-06-04.csv). We would normally 
+fix this in the code proper, but that would require a re-run of the pipeline because
+without the quote, this line is a duplicate of another, which would cause
+the pipeline to be re-run because the upstream target will have changed. For the 
+purposes of satisfying EDI requirements for which there can not be an unclosed 
+quote in column data, we will run this patch. This change should not affect any
+user's ability to use either the 2025-06-04 version or the 2026-01-28 version
+of the siteSR file. The associated {targets} remain unchanged and users may 
+encounter this issue if publishing on EDI until this is fixed in the pipeline.
+See [Issue #45](https://github.com/AquaSat/AquaMatch_siteSR/issues/45) for details.
+
+```{r}
+library(tidyverse)
+
+sites <- read_csv("a_compile_sites/out/siteSR_collated_WQP_NWIS_sites_with_NHD_info_2025-06-04.csv")
+
+# find rows with an odd number of double quotes
+odd_quote <- sites[str_count(sites$loc_id, '"') %% 2 != 0, ]
+
+# phew, there's only one. 
+sites <- sites %>%
+  mutate(loc_id = if_else(str_count(loc_id, '"') %% 2 != 0, 
+                          str_remove_all(loc_id, '"'), 
+                          loc_id))
+
+# make sure it's gone
+odd_quote <- sites[str_count(sites$loc_id, '"') %% 2 != 0, ]
+# and make sure it didn't change other instances with a quote
+other_quotes <- sites[grepl('"', sites$loc_id),]
+
+write_csv(sites, "a_compile_sites/out/siteSR_collated_WQP_NWIS_sites_with_NHD_info_2026-01-28.csv")
+```
+
